@@ -1,15 +1,14 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse, JsonResponse
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.generics import CreateAPIView, RetrieveAPIView, UpdateAPIView, DestroyAPIView
-from rest_framework.views import APIView
-from rest_framework.viewsets import ModelViewSet, ViewSet
-from rest_framework.decorators import action
+# from django.http import HttpResponse, JsonResponse
+# from rest_framework.response import Response
+# from rest_framework import status
+from rest_framework.viewsets import ModelViewSet #, ViewSet
 
 
-from .serializer import BankSerializer, DeviceSerializer, DeviceHistorySerializer
-from .models import Bank, Device, DeviceHistory
+
+from .serializer import BankSerializer, DeviceSerializer
+from .models import Bank, Device
+# History models
+# from .models import DeviceHistory
 
 
 class BankViewSet(ModelViewSet):
