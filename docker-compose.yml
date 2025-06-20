@@ -4,8 +4,7 @@ services:
     container_name: offline_devices
     ports:
       - 8000:8000
-    volumes:
-      - ./core:/app
+    
     depends_on:
       db:
         condition: service_healthy
