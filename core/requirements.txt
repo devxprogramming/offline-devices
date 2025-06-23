@@ -38,10 +38,11 @@ packaging==25.0
 pandocfilters==1.5.1
 parso==0.8.4
 pickleshare==0.7.5
-pipreqs==0.5.0
+# pipreqs==0.5.0
 platformdirs==4.3.8
 prompt-toolkit==3.0.51
 psycopg-binary==3.2.9
+psycopg2==2.9.10
 pure-eval==0.2.3
 pygments==2.19.1
 python-dateutil==2.9.0.post0
