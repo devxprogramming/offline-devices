@@ -33,6 +33,8 @@ DEBUG = os.environ.get('DEBUG', False)
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
+print(ALLOWED_HOSTS)
+
 
 # Application definition
 
@@ -111,7 +113,6 @@ DATABASES = {
     }
 }
 
-print(DATABASES["default"])
 
 
 
@@ -165,11 +166,16 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 # CORS Configuration
+CORS_ALLOWED_HOSTS = os.environ.get('CORS_ALLOWED_HOSTS', '*').split(',')
 CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '*').split(',')
+
+print(f"CORS_ALLOWED_HOSTS: {CORS_ALLOWED_HOSTS}")
 
 
 # If you want to allow all origins (less secure, for development only)
 CORS_ALLOW_ALL_ORIGINS = bool(os.environ.get('CORS_ALLOW_ALL_ORIGINS', False))
+
+CORS_ORIGIN_WHITELIST = CORS_ALLOWED_ORIGINS
 
 
 ######################### Custom Settings #########################

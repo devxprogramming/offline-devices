@@ -87,7 +87,3 @@ class DeviceHistory(models.Model):
     class Meta:
         ordering = ['-changed_at']
         verbose_name_plural = 'Device History'
-
-
-
-# https://pypi.org/project/selenium-base/

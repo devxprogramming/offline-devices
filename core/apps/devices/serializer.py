@@ -7,6 +7,11 @@ class BankSerializer(serializers.ModelSerializer):
         model = Bank
         fields = ('id', 'name', 'created', 'updated')
 
+    def validate(self, attrs):
+        if attrs['name'] in Bank.objects.values_list('name', flat=True):
+            raise serializers.ValidationError("Bank with this name already exists.")
+        return attrs
+
 
 class DeviceSerializer(serializers.ModelSerializer):
     serial_number = serializers.CharField(max_length=255, help_text="Serial Number should be of length 7. \nExample: 1013435")
