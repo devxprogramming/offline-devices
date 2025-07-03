@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeviceManager Pro - Standalone</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- ApexCharts for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" xintegrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <script>
+        // Custom Tailwind configuration
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary': '#3B82F6',
+                        'primary-dark': '#2563EB',
+                        'secondary': '#10B981',
+                        'light': '#F9FAFB',
+                        'dark': '#1F2937',
+                        'dark-secondary': '#374151',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Styles for DeviceManager Pro */
+        /* Apply a smooth transition to all elements for a polished feel */
+        * {
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        }
+
+        /* Custom scrollbar for a modern look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Animation for modal pop-up */
+        @keyframes modal-fade-in {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-enter {
+            animation: modal-fade-in 0.2s ease-out forwards;
+        }
+
+        @keyframes modal-fade-out {
+            from {
+                opacity: 1;
+                transform: scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+        }
+
+        .modal-leave {
+            animation: modal-fade-out 0.2s ease-in forwards;
+        }
+
+
+        /* Styling for ApexCharts to ensure text is visible */
+        .apexcharts-tooltip {
+            color: #374151; /* Dark gray text for tooltips */
+        }
+
+        .apexcharts-legend-text {
+            color: #4B5563 !important; /* Medium gray for legend text */
+            font-weight: 500;
+        }
+
+        /* Add a subtle glow to focused form elements */
+        .focus\:ring-primary:focus {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Active sidebar link style */
+        .sidebar-link.active {
+            background-color: #3B82F6; /* primary color */
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-light font-sans">
+    <div class="flex h-screen bg-gray-100">
+        <!-- Sidebar -->
+        <aside class="w-64 flex-shrink-0 hidden md:block bg-dark text-gray-300">
+            <div class="p-6 text-center">
+                <a href="#dashboard" class="text-2xl font-bold text-white">
+                    <i class="fas fa-cogs mr-2"></i>DeviceManager
+                </a>
+            </div>
+            <nav id="desktop-nav" class="mt-6">
+                <a href="#dashboard" class="sidebar-link flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200">
+                    <i class="fas fa-tachometer-alt w-6"></i>
+                    <span class="mx-4">Dashboard</span>
+                </a>
+                <a href="#devices" class="sidebar-link flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200">
+                    <i class="fas fa-mobile-alt w-6"></i>
+                    <span class="mx-4">Devices</span>
+                </a>
+                <a href="#banks" class="sidebar-link flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200">
+                    <i class="fas fa-university w-6"></i>
+                    <span class="mx-4">Banks</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Top Navbar -->
+            <header class="flex justify-between items-center p-4 bg-white border-b">
+                <div>
+                    <button id="menu-btn" class="text-gray-600 focus:outline-none md:hidden">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+                <div class="flex items-center">
+                    <div class="relative">
+                        <button class="flex items-center focus:outline-none">
+                            <img class="h-8 w-8 rounded-full object-cover" src="https://placehold.co/100x100/3B82F6/FFFFFF?text=A" alt="Admin avatar">
+                            <span class="ml-2 hidden md:inline">Admin</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <main id="app-root" class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-4 md:p-6">
+                <!-- App content will be injected here by JavaScript -->
+            </main>
+        </div>
+    </div>
+
+    <!-- Mobile Sidebar -->
+    <div id="mobile-menu" class="fixed inset-0 flex z-40 hidden md:hidden">
+        <div class="fixed inset-0 bg-black opacity-50" id="mobile-menu-overlay"></div>
+        <div class="relative w-64 bg-dark text-gray-300 h-full">
+             <div class="p-6 text-center">
+                <a href="#dashboard" class="text-2xl font-bold text-white">
+                    <i class="fas fa-cogs mr-2"></i>DeviceManager
+                </a>
+            </div>
+            <nav id="mobile-nav" class="mt-6">
+                <a href="#dashboard" class="sidebar-link flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200">
+                    <i class="fas fa-tachometer-alt w-6"></i>
+                    <span class="mx-4">Dashboard</span>
+                </a>
+                <a href="#devices" class="sidebar-link flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200">
+                    <i class="fas fa-mobile-alt w-6"></i>
+                    <span class="mx-4">Devices</span>
+                </a>
+                <a href="#banks" class="sidebar-link flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200">
+                    <i class="fas fa-university w-6"></i>
+                    <span class="mx-4">Banks</span>
+                </a>
+            </nav>
+        </div>
+    </div>
+
+    <!-- ========= JAVASCRIPT LIBRARIES AND LOGIC ========= -->
+
+    <script id="api-logic">
+    // --- API Communication Logic ---
+    
+    // IMPORTANT: Change this URL to your Django API's address
+    const API_BASE_URL = 'http://127.0.0.1:8000/api/v1'; // only use this is development
+
+    // const API_BASE_URL = 'http://localhost:8000/api/v1';
+    async function apiRequest(endpoint, options = {}) {
+        const url = `${API_BASE_URL}${endpoint}`;
+        const config = {
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            ...options,
+        };
+
+        try {
+            const response = await fetch(url, config);
+            if (response.status === 204) {
+                return null;
+            }
+            // Check if the response is JSON before trying to parse it.
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                const data = await response.json();
+                if (!response.ok) {
+                    console.error('API Error:', data);
+                    const errorMessage = data.detail || data.error || `Request failed with status ${response.status}`;
+                    throw new Error(errorMessage);
+                }
+                return data;
+            } else {
+                 // Handle non-JSON responses (like the 404 HTML page)
+                const textData = await response.text();
+                throw new Error(`Expected JSON response, but got ${contentType}. Status: ${response.status}. Response: ${textData.substring(0, 100)}...`);
+            }
+        } catch (error) {
+            console.error(`Failed to fetch from endpoint: ${endpoint}`, error);
+            // Only show the alert for the initial dashboard load to avoid being spammy.
+            if (endpoint === '/devices/' || endpoint === '/banks/') {
+                 alert(`Could not connect to the API. Please ensure the backend server is running at ${API_BASE_URL} and that CORS is configured correctly.\n\nError: ${error.message}`);
+            }
+            throw error;
+        }
+    }
+
+    const devicesAPI = {
+        getAll: () => apiRequest('/devices/'),
+        create: (data) => apiRequest('/devices/', { method: 'POST', body: JSON.stringify(data) }),
+        update: (id, data) => apiRequest(`/devices/${id}/`, { method: 'PUT', body: JSON.stringify(data) }),
+        delete: (id) => apiRequest(`/devices/${id}/`, { method: 'DELETE' }),
+    };
+
+    const banksAPI = {
+        getAll: () => apiRequest('/banks/'),
+        create: (data) => apiRequest('/banks/', { method: 'POST', body: JSON.stringify(data) }),
+        update: (id, data) => apiRequest(`/banks/${id}/`, { method: 'PUT', body: JSON.stringify(data) }),
+        delete: (id) => apiRequest(`/banks/${id}/`, { method: 'DELETE' }),
+    };
+
+    const historyAPI = {
+        getAll: () => apiRequest('/device-history/'),
+    };
+
+    const DEVICE_STATUS = {
+        'NEW_AVAILABLE': 'New - Available',
+        'ASSIGNED': 'Assigned to Bank',
+        'RETURNED_FAULTY': 'Returned - Faulty',
+        'RETURNED_UPGRADE': 'Returned - Needs Upgrade',
+        'IN_CUSTODY': 'In Custody (Processing)',
+        'DISPATCHED': 'Dispatched to Bank',
+    };
+    </script>
+    
+    <script id="dashboard-page-component">
+    // --- Dashboard Page Component ---
+    function renderDashboardPage() {
+        const dashboardContainer = document.createElement('div');
+        dashboardContainer.innerHTML = `
+            <div class="container mx-auto">
+                <h1 class="text-3xl font-bold text-dark mb-6">Dashboard</h1>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                    <!-- Stat Cards -->
+                    <div class="bg-white p-6 rounded-xl shadow-md transform hover:scale-105 transition-transform duration-300"><div class="flex items-center"><div class="bg-blue-100 p-3 rounded-full"><i class="fas fa-server text-blue-500 text-2xl"></i></div><div class="ml-4"><p class="text-gray-500">Total Devices</p><p id="total-devices" class="text-2xl font-bold text-dark">0</p></div></div></div>
+                    <div class="bg-white p-6 rounded-xl shadow-md transform hover:scale-105 transition-transform duration-300"><div class="flex items-center"><div class="bg-green-100 p-3 rounded-full"><i class="fas fa-check-circle text-green-500 text-2xl"></i></div><div class="ml-4"><p class="text-gray-500">Devices Assigned</p><p id="devices-assigned" class="text-2xl font-bold text-dark">0</p></div></div></div>
+                    <div class="bg-white p-6 rounded-xl shadow-md transform hover:scale-105 transition-transform duration-300"><div class="flex items-center"><div class="bg-yellow-100 p-3 rounded-full"><i class="fas fa-box-open text-yellow-500 text-2xl"></i></div><div class="ml-4"><p class="text-gray-500">Available</p><p id="devices-available" class="text-2xl font-bold text-dark">0</p></div></div></div>
+                    <div class="bg-white p-6 rounded-xl shadow-md transform hover:scale-105 transition-transform duration-300"><div class="flex items-center"><div class="bg-red-100 p-3 rounded-full"><i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i></div><div class="ml-4"><p class="text-gray-500">Faulty/Upgrade</p><p id="devices-faulty" class="text-2xl font-bold text-dark">0</p></div></div></div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">
+                    <div class="lg:col-span-3 bg-white p-6 rounded-xl shadow-md"><h2 class="text-xl font-semibold text-dark mb-4">Devices per Bank</h2><div id="banks-chart"></div></div>
+                    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-md"><h2 class="text-xl font-semibold text-dark mb-4">Device Status Overview</h2><div id="status-chart"></div></div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md"><h2 class="text-xl font-semibold text-dark mb-4">Recent Device History</h2><div class="overflow-x-auto"><table class="w-full text-left"><thead><tr class="text-gray-500 border-b"><th class="py-3 px-4">Serial Number</th><th class="py-3 px-4">Change</th><th class="py-3 px-4">Reason</th><th class="py-3 px-4">Date</th></tr></thead><tbody id="history-table-body"><tr><td colspan="4" class="text-center p-8 text-gray-400">Loading recent activity...</td></tr></tbody></table></div></div>
+            </div>`;
+
+        loadDashboardData(dashboardContainer);
+        return dashboardContainer;
+    }
+
+    async function loadDashboardData(container) {
+        // Load critical data first. If this fails, the whole dashboard is unusable.
+        try {
+            const [devices, banks] = await Promise.all([devicesAPI.getAll(), banksAPI.getAll()]);
+            
+            // Update Stats
+            container.querySelector('#total-devices').textContent = devices.length;
+            container.querySelector('#devices-assigned').textContent = devices.filter(d => d.status === 'ASSIGNED').length;
+            container.querySelector('#devices-available').textContent = devices.filter(d => d.status === 'NEW_AVAILABLE').length;
+            container.querySelector('#devices-faulty').textContent = devices.filter(d => ['RETURNED_FAULTY', 'RETURNED_UPGRADE'].includes(d.status)).length;
+
+            renderStatusChart(devices, container.querySelector('#status-chart'));
+            renderBanksChart(devices, banks, container.querySelector('#banks-chart'));
+
+            // Now, load non-critical history data separately.
+            // This prevents the entire dashboard from failing if only the history endpoint is down.
+            try {
+                const history = await historyAPI.getAll();
+                renderHistoryTable(history, devices, container.querySelector('#history-table-body'));
+            } catch (historyError) {
+                 console.error("Failed to load device history:", historyError);
+                 container.querySelector('#history-table-body').innerHTML = `<tr><td colspan="4" class="text-center p-8 text-red-500">Could not load recent activity. <br><small>Is the history API endpoint configured on the backend?</small></td></tr>`;
+            }
+
+        } catch (error) {
+            console.error("Failed to load critical dashboard data:", error);
+            container.querySelector('#status-chart').innerHTML = `<p class="text-red-500 text-center">Could not load chart data.</p>`;
+            container.querySelector('#banks-chart').innerHTML = `<p class="text-red-500 text-center">Could not load chart data.</p>`;
+            container.querySelector('#history-table-body').innerHTML = `<tr><td colspan="4" class="text-center p-8 text-red-500">Failed to load dashboard data.</td></tr>`;
+        }
+    }
+
+    function renderStatusChart(devices, element) {
+        const statusCounts = devices.reduce((acc, device) => {
+            const statusName = DEVICE_STATUS[device.status] || 'Unknown';
+            acc[statusName] = (acc[statusName] || 0) + 1;
+            return acc;
+        }, {});
+        const options = { chart: { type: 'donut', height: 350 }, series: Object.values(statusCounts), labels: Object.keys(statusCounts), colors: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#6366F1', '#8B5CF6'], legend: { position: 'bottom' }};
+        new ApexCharts(element, options).render();
+    }
+
+    function renderBanksChart(devices, banks, element) {
+        const bankMap = new Map(banks.map(b => [b.id, b.name]));
+        const devicesPerBank = devices.reduce((acc, device) => {
+            if (device.assigned_to) {
+                const bankName = bankMap.get(device.assigned_to) || 'Unknown Bank';
+                acc[bankName] = (acc[bankName] || 0) + 1;
+            }
+            return acc;
+        }, {});
+        const options = { chart: { type: 'bar', height: 350, toolbar: { show: false } }, series: [{ name: 'Devices', data: Object.values(devicesPerBank) }], xaxis: { categories: Object.keys(devicesPerBank) }, plotOptions: { bar: { horizontal: false, columnWidth: '55%', endingShape: 'rounded' }}, dataLabels: { enabled: false }, colors: ['#3B82F6'] };
+        new ApexCharts(element, options).render();
+    }
+
+    function renderHistoryTable(history, devices, tableBody) {
+        tableBody.innerHTML = '';
+        if (history.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="4" class="text-center p-8 text-gray-400">No recent activity found.</td></tr>`;
+            return;
+        }
+        const deviceMap = new Map(devices.map(d => [d.id, d.serial_number]));
+        history.slice(0, 5).forEach(entry => {
+            const row = `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="py-3 px-4 font-medium text-dark">${deviceMap.get(entry.device) || 'N/A'}</td>
+                    <td class="py-3 px-4"><span class="bg-gray-200 text-gray-700 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">${DEVICE_STATUS[entry.status_from] || entry.status_from}</span> &rarr; <span class="bg-blue-100 text-blue-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">${DEVICE_STATUS[entry.status_to] || entry.status_to}</span></td>
+                    <td class="py-3 px-4 text-gray-600">${entry.reason_for_change || 'N/A'}</td>
+                    <td class="py-3 px-4 text-gray-500">${new Date(entry.changed_at).toLocaleDateString()}</td>
+                </tr>`;
+            tableBody.innerHTML += row;
+        });
+    }
+    </script>
+    
+    <script id="devices-page-component">
+    // --- Devices Page Component ---
+    function renderDevicesPage() {
+        const pageContainer = document.createElement('div');
+        pageContainer.innerHTML = `
+            <div class="container mx-auto">
+                <div class="flex justify-between items-center mb-6"><h1 class="text-3xl font-bold text-dark">Device Management</h1><button id="add-device-btn" class="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"><i class="fas fa-plus mr-2"></i>Add New Device</button></div>
+                <div class="bg-white p-4 rounded-xl shadow-md mb-6 flex flex-wrap items-center gap-4"><div class="relative flex-grow"><span class="absolute inset-y-0 left-0 flex items-center pl-3"><i class="fas fa-search text-gray-400"></i></span><input type="text" id="search-input" placeholder="Search by Serial Number..." class="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"></div><div class="relative"><select id="status-filter" class="w-full md:w-48 appearance-none bg-white border rounded-lg py-2 px-4 pr-8 focus:outline-none focus:ring-2 focus:ring-primary"><option value="">All Statuses</option></select><div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700"><i class="fas fa-chevron-down text-xs"></i></div></div></div>
+                <div class="bg-white rounded-xl shadow-md overflow-hidden"><div class="overflow-x-auto"><table class="w-full text-left"><thead><tr class="text-gray-500 border-b bg-gray-50"><th class="py-3 px-4 font-semibold">Serial Number</th><th class="py-3 px-4 font-semibold">Status</th><th class="py-3 px-4 font-semibold">Assigned Bank</th><th class="py-3 px-4 font-semibold">Last Updated</th><th class="py-3 px-4 font-semibold text-center">Actions</th></tr></thead><tbody id="devices-table-body"><tr><td colspan="5" class="text-center p-8 text-gray-400">Loading devices...</td></tr></tbody></table></div></div>
+            </div>
+            <div id="device-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+                <div class="bg-white rounded-xl shadow-2xl w-full max-w-md transform transition-all" id="modal-content">
+                    <form id="device-form"><div class="flex justify-between items-center p-4 border-b"><h2 id="modal-title" class="text-2xl font-bold text-dark">Add New Device</h2><button type="button" id="close-modal-btn" class="text-gray-400 hover:text-gray-600">&times;</button></div><div class="p-6 space-y-4"><input type="hidden" id="device-id"><div><label for="serial-number" class="block text-sm font-medium text-gray-700">Serial Number</label><input type="text" id="serial-number" name="serial_number" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"></div><div><label for="status" class="block text-sm font-medium text-gray-700">Status</label><select id="status" name="status" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"></select></div><div><label for="assigned-to" class="block text-sm font-medium text-gray-700">Assign to Bank</label><select id="assigned-to" name="assigned_to" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"><option value="">None</option></select></div><div><label for="notes" class="block text-sm font-medium text-gray-700">Notes</label><textarea id="notes" name="notes" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"></textarea></div></div><div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-xl"><button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm">Save Device</button><button type="button" id="cancel-modal-btn" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm">Cancel</button></div></form>
+                </div>
+            </div>`;
+        
+        attachDevicesPageListeners(pageContainer);
+        return pageContainer;
+    }
+
+    function attachDevicesPageListeners(container) {
+        let allDevices = [], allBanks = [];
+        const tableBody = container.querySelector('#devices-table-body');
+        const searchInput = container.querySelector('#search-input');
+        const statusFilter = container.querySelector('#status-filter');
+        const modal = container.querySelector('#device-modal');
+        const modalContent = container.querySelector('#modal-content');
+        const deviceForm = container.querySelector('#device-form');
+        const statusInput = container.querySelector('#status');
+        const assignedToInput = container.querySelector('#assigned-to');
+
+        const openModal = () => { modal.classList.remove('hidden'); modal.classList.add('flex'); modalContent.classList.add('modal-enter'); };
+        const closeModal = () => { modalContent.classList.remove('modal-enter'); modalContent.classList.add('modal-leave'); setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); modalContent.classList.remove('modal-leave'); }, 200); };
+        
+        container.querySelector('#add-device-btn').addEventListener('click', () => { container.querySelector('#modal-title').textContent = 'Add New Device'; deviceForm.reset(); container.querySelector('#device-id').value = ''; openModal(); });
+        container.querySelector('#close-modal-btn').addEventListener('click', closeModal);
+        container.querySelector('#cancel-modal-btn').addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+        const renderTable = (devices) => {
+            tableBody.innerHTML = '';
+            if (devices.length === 0) { tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-gray-400">No devices found.</td></tr>`; return; }
+            const bankMap = new Map(allBanks.map(b => [b.id, b.name]));
+            devices.forEach(device => {
+                const statusName = DEVICE_STATUS[device.status] || device.status;
+                const getStatusColor = (s) => ({'NEW_AVAILABLE': 'bg-yellow-100 text-yellow-800', 'ASSIGNED': 'bg-green-100 text-green-800', 'DISPATCHED': 'bg-blue-100 text-blue-800', 'RETURNED_FAULTY': 'bg-red-100 text-red-800', 'RETURNED_UPGRADE': 'bg-red-100 text-red-800', 'IN_CUSTODY': 'bg-purple-100 text-purple-800'}[s] || 'bg-gray-100 text-gray-800');
+                const row = `<tr class="border-b hover:bg-gray-50"><td class="py-3 px-4 font-medium text-dark">${device.serial_number}</td><td class="py-3 px-4"><span class="px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(device.status)}">${statusName}</span></td><td class="py-3 px-4 text-gray-600">${device.assigned_to ? bankMap.get(device.assigned_to) : '—'}</td><td class="py-3 px-4 text-gray-500">${new Date(device.updated).toLocaleString()}</td><td class="py-3 px-4 text-center"><button data-action="edit" data-id="${device.id}" class="text-blue-500 hover:text-blue-700 p-1"><i class="fas fa-edit"></i></button><button data-action="delete" data-id="${device.id}" class="text-red-500 hover:text-red-700 p-1"><i class="fas fa-trash"></i></button></td></tr>`;
+                tableBody.innerHTML += row;
+            });
+        };
+
+        const applyFilters = () => {
+            const searchTerm = searchInput.value.toLowerCase();
+            const status = statusFilter.value;
+            const filtered = allDevices.filter(d => d.serial_number.toLowerCase().includes(searchTerm) && (status ? d.status === status : true));
+            renderTable(filtered);
+        };
+
+        const initializePage = async () => {
+            Object.entries(DEVICE_STATUS).forEach(([k, v]) => { statusFilter.innerHTML += `<option value="${k}">${v}</option>`; statusInput.innerHTML += `<option value="${k}">${v}</option>`; });
+            try {
+                [allDevices, allBanks] = await Promise.all([devicesAPI.getAll(), banksAPI.getAll()]);
+                assignedToInput.innerHTML = '<option value="">None</option>';
+                allBanks.forEach(b => { assignedToInput.innerHTML += `<option value="${b.id}">${b.name}</option>`; });
+                renderTable(allDevices);
+            } catch (error) { tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-red-500">Failed to load devices.</td></tr>`; }
+        };
+
+        deviceForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = container.querySelector('#device-id').value;
+            const formData = { serial_number: container.querySelector('#serial-number').value, status: statusInput.value, assigned_to: assignedToInput.value ? parseInt(assignedToInput.value) : null, notes: container.querySelector('#notes').value };
+            try {
+                await (id ? devicesAPI.update(id, formData) : devicesAPI.create(formData));
+                closeModal();
+                const newDevices = await devicesAPI.getAll(); allDevices = newDevices; applyFilters();
+            } catch (error) { alert(`Error saving device: ${error.message}`); }
+        });
+
+        tableBody.addEventListener('click', async (e) => {
+            const target = e.target.closest('button');
+            if (!target) return;
+            const action = target.dataset.action;
+            const id = target.dataset.id;
+            if (action === 'edit') {
+                const device = allDevices.find(d => d.id == id);
+                if (device) { container.querySelector('#modal-title').textContent = 'Edit Device'; container.querySelector('#device-id').value = device.id; container.querySelector('#serial-number').value = device.serial_number; statusInput.value = device.status; assignedToInput.value = device.assigned_to || ''; container.querySelector('#notes').value = device.notes || ''; openModal(); }
+            }
+            if (action === 'delete' && confirm('Are you sure?')) {
+                try { await devicesAPI.delete(id); const newDevices = await devicesAPI.getAll(); allDevices = newDevices; applyFilters(); } catch (error) { alert(`Error deleting device: ${error.message}`); }
+            }
+        });
+
+        searchInput.addEventListener('input', applyFilters);
+        statusFilter.addEventListener('change', applyFilters);
+        initializePage();
+    }
+    </script>
+
+    <script id="banks-page-component">
+    // --- Banks Page Component ---
+    function renderBanksPage() {
+        const pageContainer = document.createElement('div');
+        pageContainer.innerHTML = `
+            <div class="container mx-auto">
+                <div class="flex justify-between items-center mb-6"><h1 class="text-3xl font-bold text-dark">Bank Management</h1><button id="add-bank-btn" class="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"><i class="fas fa-plus mr-2"></i>Add New Bank</button></div>
+                <div class="bg-white rounded-xl shadow-md overflow-hidden"><div class="overflow-x-auto"><table class="w-full text-left"><thead><tr class="text-gray-500 border-b bg-gray-50"><th class="py-3 px-4 font-semibold">Bank Name</th><th class="py-3 px-4 font-semibold">Devices Assigned</th><th class="py-3 px-4 font-semibold">Date Created</th><th class="py-3 px-4 font-semibold text-center">Actions</th></tr></thead><tbody id="banks-table-body"><tr><td colspan="4" class="text-center p-8 text-gray-400">Loading banks...</td></tr></tbody></table></div></div>
+            </div>
+            <div id="bank-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+                <div class="bg-white rounded-xl shadow-2xl w-full max-w-md transform transition-all" id="bank-modal-content">
+                    <form id="bank-form"><div class="flex justify-between items-center p-4 border-b"><h2 id="bank-modal-title" class="text-2xl font-bold text-dark">Add New Bank</h2><button type="button" id="close-bank-modal-btn" class="text-gray-400 hover:text-gray-600">&times;</button></div><div class="p-6"><input type="hidden" id="bank-id"><div><label for="bank-name" class="block text-sm font-medium text-gray-700">Bank Name</label><input type="text" id="bank-name" name="name" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"></div></div><div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-xl"><button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm">Save Bank</button><button type="button" id="cancel-bank-modal-btn" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm">Cancel</button></div></form>
+                </div>
+            </div>`;
+        attachBanksPageListeners(pageContainer);
+        return pageContainer;
+    }
+
+    function attachBanksPageListeners(container) {
+        let allBanks = [], allDevices = [];
+        const tableBody = container.querySelector('#banks-table-body');
+        const modal = container.querySelector('#bank-modal');
+        const modalContent = container.querySelector('#bank-modal-content');
+        const bankForm = container.querySelector('#bank-form');
+
+        const openModal = () => { modal.classList.remove('hidden'); modal.classList.add('flex'); modalContent.classList.add('modal-enter'); };
+        const closeModal = () => { modalContent.classList.remove('modal-enter'); modalContent.classList.add('modal-leave'); setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); modalContent.classList.remove('modal-leave'); }, 200); };
+        
+        container.querySelector('#add-bank-btn').addEventListener('click', () => { container.querySelector('#bank-modal-title').textContent = 'Add New Bank'; bankForm.reset(); container.querySelector('#bank-id').value = ''; openModal(); });
+        container.querySelector('#close-bank-modal-btn').addEventListener('click', closeModal);
+        container.querySelector('#cancel-bank-modal-btn').addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+        const renderTable = (banks) => {
+            tableBody.innerHTML = '';
+            if (banks.length === 0) { tableBody.innerHTML = `<tr><td colspan="4" class="text-center p-8 text-gray-400">No banks found.</td></tr>`; return; }
+            const deviceCounts = allDevices.reduce((acc, device) => { if (device.assigned_to) { acc[device.assigned_to] = (acc[device.assigned_to] || 0) + 1; } return acc; }, {});
+            banks.forEach(bank => {
+                const row = `<tr class="border-b hover:bg-gray-50"><td class="py-3 px-4 font-medium text-dark">${bank.name}</td><td class="py-3 px-4 text-gray-600">${deviceCounts[bank.id] || 0}</td><td class="py-3 px-4 text-gray-500">${new Date(bank.created).toLocaleDateString()}</td><td class="py-3 px-4 text-center"><button data-action="edit" data-id="${bank.id}" class="text-blue-500 hover:text-blue-700 p-1"><i class="fas fa-edit"></i></button><button data-action="delete" data-id="${bank.id}" class="text-red-500 hover:text-red-700 p-1"><i class="fas fa-trash"></i></button></td></tr>`;
+                tableBody.innerHTML += row;
+            });
+        };
+
+        const initializePage = async () => {
+            try {
+                [allBanks, allDevices] = await Promise.all([banksAPI.getAll(), devicesAPI.getAll()]);
+                renderTable(allBanks);
+            } catch (error) { tableBody.innerHTML = `<tr><td colspan="4" class="text-center p-8 text-red-500">Failed to load banks.</td></tr>`; }
+        };
+
+        bankForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = container.querySelector('#bank-id').value;
+            const formData = { name: container.querySelector('#bank-name').value };
+            try {
+                await (id ? banksAPI.update(id, formData) : banksAPI.create(formData));
+                closeModal();
+                allBanks = await banksAPI.getAll(); renderTable(allBanks);
+            } catch (error) { alert(`Error saving bank: ${error.message}`); }
+        });
+
+        tableBody.addEventListener('click', async (e) => {
+            const target = e.target.closest('button');
+            if (!target) return;
+            const action = target.dataset.action;
+            const id = target.dataset.id;
+            if (action === 'edit') {
+                const bank = allBanks.find(b => b.id == id);
+                if (bank) { container.querySelector('#bank-modal-title').textContent = 'Edit Bank'; container.querySelector('#bank-id').value = bank.id; container.querySelector('#bank-name').value = bank.name; openModal(); }
+            }
+            if (action === 'delete' && confirm('Are you sure?')) {
+                try { await banksAPI.delete(id); allBanks = await banksAPI.getAll(); renderTable(allBanks); } catch (error) { alert(`Error deleting bank: ${error.message}`); }
+            }
+        });
+
+        initializePage();
+    }
+    </script>
+    
+    <script id="app-router-and-main">
+    // --- Main App Logic and Router ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const appRoot = document.getElementById('app-root');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        const routes = {
+            '#dashboard': renderDashboardPage,
+            '#devices': renderDevicesPage,
+            '#banks': renderBanksPage,
+        };
+
+        function router() {
+            const path = window.location.hash || '#dashboard';
+            const renderFunction = routes[path] || routes['#dashboard'];
+            
+            appRoot.innerHTML = ''; // Clear the root
+            appRoot.appendChild(renderFunction()); // Render the new page
+
+            updateActiveLink(path);
+            mobileMenu.classList.add('hidden'); // Close mobile menu on navigation
+        }
+
+        function updateActiveLink(path) {
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                if (link.getAttribute('href') === path) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        }
+
+        // Mobile menu toggle
+        document.getElementById('menu-btn').addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+        document.getElementById('mobile-menu-overlay').addEventListener('click', () => {
+            mobileMenu.classList.add('hidden');
+        });
+
+        // Listen for hash changes to navigate
+        window.addEventListener('hashchange', router);
+
+        // Initial load
+        router();
+    });
+    </script>
+
+</body>
+</html>

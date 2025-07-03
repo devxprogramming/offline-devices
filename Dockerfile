@@ -22,6 +22,9 @@ RUN  pip install -r requirements.txt
 # Copy the app
 COPY core/ .
 
+# RUN chmod +x core/manage.py
+# RUN python core/manage.py migrate
+
 EXPOSE 8000
 
 

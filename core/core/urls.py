@@ -21,7 +21,12 @@ api_urlpatterns = [
     path('', include('apps.devices.urls')),
 ]
 
+app_testing_urlpatterns = [
+    path('', include('apps.appTesting.urls')),
+]
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/', include(api_urlpatterns)),
+    path('app-testing/', include(app_testing_urlpatterns)),
 ]
