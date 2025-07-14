@@ -18,5 +18,17 @@ class DeviceSerializer(serializers.ModelSerializer):
     serial_number = serializers.CharField(max_length=255, help_text="Serial Number should be of length 7. \nExample: 1013435")
     class Meta:
         model = Device
+        fields = ['id', 'serial_number', 'branch', 'notes', 'created_at', 'updated_at', 'branch']
+
+    def validate(self, attrs):
+        if len(attrs['serial_number']) != 7:
+            raise serializers.ValidationError("Serial Number should be of length 7. \nExample: 1013435")
+        return attrs
+
+
+
+class BranchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Branch
         fields = "__all__"
         

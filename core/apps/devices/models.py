@@ -11,7 +11,7 @@ class Bank(models.Model):
         verbose_name = 'Bank'
         verbose_name_plural = 'Banks'
 
-        ordering = ["name"]
+        ordering = ["-created"]
 
     def __str__(self):
         return self.name

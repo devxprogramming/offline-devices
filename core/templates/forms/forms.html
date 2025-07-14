@@ -1,0 +1,29 @@
+{% if page == "createDevice" %}
+
+
+<div class="content-wrapper">
+  <div class="card">
+    <div class="card-body">
+      <div class="form-group">
+        <label for="serial_number">Serial Number</label>
+        <input class="form-control" type="number" name="serial_number" id="serial_number" placeholder="Eg: 101-245-12" maxLength='7'>
+      </div>
+      <div class="form-group">
+        <label for="bank_select">Select Bank</label>
+        <select class='form-select' id="selectBank" name="bank_select" id="bank_select">
+          <option value="">---Select Bank---</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <div id="branchContainer"></div>
+      </div>
+
+        <button id="saveDevice" class="btn btn-primary">Save</button>
+        <button class="btn btn-danger">Cancel</button>
+    </div>
+  </div>
+</div>
+
+
+
+{% endif %}

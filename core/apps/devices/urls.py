@@ -7,10 +7,9 @@ from django.urls import path
 router = DefaultRouter()
 router.register(r'banks', views.BankViewSet, basename='bank')
 router.register(r'devices', views.DeviceViewSet, basename='device')
-
+router.register(r'branches', views.BranchViewSet, basename='branch')
 
 urlpatterns = [
-    path('dashboard/', views.dashboard, name='dashboard')
 ]
     
 

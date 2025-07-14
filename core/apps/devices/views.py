@@ -3,6 +3,7 @@ from django.shortcuts import get_object_or_404, render
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.decorators.vary import vary_on_cookie, vary_on_headers
+from django.core.paginator import Paginator
 
 
 from rest_framework.response import Response
@@ -11,12 +12,15 @@ from rest_framework.viewsets import ModelViewSet #, ViewSet
 from rest_framework import status
 from .serializer import DeviceSerializer, BankSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly, IsAdminUser
+from rest_framework.pagination import PageNumberPagination
 
 
-from .serializer import BankSerializer, DeviceSerializer
-from .models import Bank, Device
+from .serializer import BankSerializer, DeviceSerializer, BranchSerializer
+from .models import Bank, Device, Branch
 # History models
 # from .models import DeviceHistory
+
+from .pagination import DevicePagination
 
 
 
@@ -45,6 +49,8 @@ class BankViewSet(ModelViewSet):
     model = Bank
     permission_classes = [AllowAny]
 
+
+
     # Create method
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -54,7 +60,7 @@ class BankViewSet(ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     # Read method
-    @method_decorator(cache_page(60 * 15, key_prefix="bank_list"))
+    @method_decorator(cache_page(60 * 15, key_prefix="bank_list")) # cache for 15 minutes
     def list(self, request, *args, **kwargs):
         model_data = self.model.objects.all()
         serializer = self.get_serializer(model_data, many=True)
@@ -93,21 +99,28 @@ class DeviceViewSet(ModelViewSet):
     serializer_class = DeviceSerializer
     model = Device
     permission_classes = [AllowAny]
+    pagination_class = DevicePagination
 
 
     # Create method
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     # Read method
     def list(self, request, *args, **kwargs):
-        model_data = self.model.objects.all()
-        serializer = self.get_serializer(model_data, many=True)
-        return Response(serializer.data, status.HTTP_200_OK)
+        queryset = self.get_queryset()
+        page = self.paginate_queryset(queryset)
+
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     
     # Update Method
     def update(self, request, *args, **kwargs):
@@ -138,5 +151,25 @@ class DeviceViewSet(ModelViewSet):
 
 
 
-def dashboard(request):
-    return render(request, 'dashboard.html')
+
+
+
+
+
+
+class BranchViewSet(ModelViewSet):
+    """
+    API endpoint for managing Branches.
+    """
+    queryset = Branch.objects.filter()
+    serializer_class = BranchSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        quesryset = super().get_queryset()
+
+        bank_id = self.request.query_params.get('bank_id')
+        if bank_id:
+            quesryset = quesryset.filter(bank_id=bank_id)
+
+        return quesryset

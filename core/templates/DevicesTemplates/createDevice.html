@@ -1,0 +1,12 @@
+{% include "base.html" %}
+{% load static %}
+{% block main_content %}
+    {% include "forms/forms.html" %}
+{% endblock main_content %}
+
+
+{% block personal_scripts %}
+
+<script src="{% static "js/createDeviceScript.js" %}"></script>
+
+{% endblock personal_scripts %}
