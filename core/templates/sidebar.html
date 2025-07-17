@@ -10,15 +10,30 @@
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" data-bs-toggle="collapse" href="#ui-basic" aria-expanded="false" aria-controls="ui-basic">
+      <a class="nav-link" data-bs-toggle="collapse" href="#manage-devices" aria-expanded="false" aria-controls="ui-basic">
         <i class="icon-layout menu-icon"></i>
         <span class="menu-title">Manage Devices</span>
         <i class="menu-arrow"></i>
       </a>
-      <div class="collapse" id="ui-basic">
+      <div class="collapse" id="manage-devices">
         <ul class="nav flex-column sub-menu">
           <li class="nav-item"> <a class="nav-link" href="{% url "create-device-view" %}" id="createDeviceBtnTemplate">Create Device</a></li>
           <li class="nav-item"> <a class="nav-link" href="{% url "list-devices-view" %}">List Devices</a></li>
+        </ul>
+      </div>
+    </li>
+
+
+    <li class="nav-item">
+      <a class="nav-link" data-bs-toggle="collapse" href="#export-devices" aria-expanded="false" aria-controls="ui-basic">
+        <i class="icon-layout menu-icon"></i>
+        <span class="menu-title">Export Devices</span>
+        <i class="menu-arrow"></i>
+      </a>
+      <div class="collapse" id="export-devices">
+        <ul class="nav flex-column sub-menu">
+          <li class="nav-item"> <a class="nav-link" href="#" id="createDeviceBtnTemplate">Bank Based</a></li>
+          <li class="nav-item"> <a class="nav-link" href="{% url 'branch_based_export' %}">Branche Based</a></li>
         </ul>
       </div>
     </li>

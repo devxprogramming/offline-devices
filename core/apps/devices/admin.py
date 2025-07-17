@@ -28,7 +28,7 @@ class DeviceInlineTable(admin.TabularInline):
 
 @admin.register(Branch)
 class BranchAdmin(admin.ModelAdmin):
-    inlines = [DeviceInlineTable]
+    # inlines = [DeviceInlineTable]
     list_display = ('branch_name', 'bank')
 
 

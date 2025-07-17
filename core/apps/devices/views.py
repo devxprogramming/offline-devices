@@ -1,21 +1,17 @@
 # from django.http import HttpResponse, JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
-from django.views.decorators.vary import vary_on_cookie, vary_on_headers
-from django.core.paginator import Paginator
 
 
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.viewsets import ModelViewSet #, ViewSet
-from rest_framework import status
 from .serializer import DeviceSerializer, BankSerializer
-from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly, IsAdminUser
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import AllowAny
+from rest_framework.decorators import action
 
-
-from .serializer import BankSerializer, DeviceSerializer, BranchSerializer
+from .serializer import BranchSerializer
 from .models import Bank, Device, Branch
 # History models
 # from .models import DeviceHistory
@@ -25,7 +21,7 @@ from .pagination import DevicePagination
 
 
 # Helper function to handle device history creation
-
+from services.exportor import export_branch_devices
 
 
 
@@ -104,11 +100,19 @@ class DeviceViewSet(ModelViewSet):
 
     # Create method
     def create(self, request, *args, **kwargs):
+        serial = request.data.get('serial_number')
+        # Early‐out if it’s already in DB
+        if Device.objects.filter(serial_number=serial).exists():
+            return Response(
+                {"error": "Device already exists."},
+                status=status.HTTP_409_CONFLICT
+            )
+
+        # Otherwise proceed normally
         serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
     
     # Read method
     def list(self, request, *args, **kwargs):
@@ -149,27 +153,55 @@ class DeviceViewSet(ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-
-
-
-
-
-
-
-
 class BranchViewSet(ModelViewSet):
     """
     API endpoint for managing Branches.
     """
-    queryset = Branch.objects.filter()
+    queryset = Branch.objects.all()
     serializer_class = BranchSerializer
     permission_classes = [AllowAny]
 
-    def get_queryset(self):
-        quesryset = super().get_queryset()
+    def list(self, request, *args, **kwargs):
+        queryset = super().get_queryset()
 
         bank_id = self.request.query_params.get('bank_id')
         if bank_id:
-            quesryset = quesryset.filter(bank_id=bank_id)
+            try:
+                data = {}
+                bank = Bank.objects.get(pk=bank_id)
+                branches = bank.branches.all()
+                
+                # Build branches list
+                branch_names = (
+                    [b.branch_name for b in branches]
+                    if len(branches) > 1
+                    else ['No branches found']
+                )
+                data['bank'] = bank.name
+                data['branches'] = branch_names
 
-        return quesryset
+                serializer = self.get_serializer(branches, many=True)
+                specificBranches = [b['branch_name'] for b in serializer.data]
+                return Response(
+                    {"bank": bank.name, "branches": serializer.data}, 
+                status.HTTP_200_OK)
+            except Bank.DoesNotExist:
+                return Response({"error":"Bank does not exits"})
+            except Bank.MultipleObjectsReturned:
+                return Response({"error": "got more than one bank"})
+            except Exception as e:
+                return Response(f"[Error] occured when fetching branches. \n Error Log: {e}", status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(self.get_serializer(self.queryset, many=True), status.HTTP_200_OK)
+
+    # def get_queryset(self):
+    #     qs = super().get_queryset()
+    #     bank_id = self.request.query_params.get('bank_id')
+    #     return qs.filter(bank_id=bank_id).all() if bank_id else qs
+
+    @action(detail=True, methods=['get'], url_path='export-devices')
+    def export_devices(self, request, pk=None):
+        if pk is not None:
+            export_format = request.query_params.get("format", "csv")
+            return export_branch_devices(branch_id=pk, export_format='csv')
+        return Response({"error": "Branch not found"}, status.HTTP_404_NOT_FOUND)

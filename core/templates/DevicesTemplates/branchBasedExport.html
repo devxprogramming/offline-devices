@@ -1,0 +1,26 @@
+{% include "base.html" %}
+{% load static %}
+
+<!--Main content div replace-->
+
+{% block main_content %}
+
+<div class="content-wrapper">
+    <div class="card">
+        <div class="card-body" style="border: 1px solid black; width: min(450px, 60%)">
+            <select name="bank_name" id="bank_name">
+            </select>
+        </div>
+    </div>
+</div>
+
+
+{% endblock main_content %}
+
+
+<!--Add custom scripts-->
+{% block personal_scripts %}
+
+<script src="{% static "js/createDeviceScript.js" %}"></script>
+
+{% endblock personal_scripts %}
